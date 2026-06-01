@@ -1,3 +1,5 @@
+
+
 <script setup>
    import WeatherCard from '../components/WeatherCard.vue'
 
@@ -16,6 +18,3 @@
 .subtitle { color: #66748B;}
 
 </style>
-
-
-
