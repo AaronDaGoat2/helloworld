@@ -1,28 +1,45 @@
 <script setup>
-import {onMounted} from 'vue'
+import {onMounted, watch,onUnmounted} from 'vue'
 import {useWeatherStore} from '../stores/weatherStore'
 import {obtenerClima, interpretaCodigo } from '../services/weatherServices'
 
 const store = useWeatherStore();
+let timer = null;
+
+
+
 async function cargarClima(){
     store.cargando = true;
     store.limpiarError();
     try{
         const datos = await obtenerClima(store.latitud, store.longitud);
-        console.log(datos)
-        store.setClima(datos.temperatura, datos.viento);
-        store.codigoClima = datos.codigosClima
+        store.setClima(datos.temperatura, datos.viento, datos.codigosClima);
         //store.descripcionClima = interpretaCodigo(datos.codigosClima)
         
     } catch {
-        store.error = 'No se pudo carnal no se conecto a la API del clima';
+        store.error = 'No se pudo carnal no se pudo obtener el clima. Verifica tu conexión.';
     } finally {
         store.cargando = false;
     }
 }
+/* Watch: recargar cuando el usuario cambia de ciudad
+ solo se ejecutara cuando latitud o longitud cambian
+*/
+watch(
+    [()=> store.latitud, () => store.longitud],
+    () => {
+        cargarClima();
+    }
+)
+onMounted(async () =>{
+    await cargarClima();
+    timer = setInterval(cargarClima, 5*60*1000)// cada 5 minutos
+});
 
+onUnmounted(() => {
+    clearInterval(timer)
+})
 
-onMounted(cargarClima);
 </script>
 <template>
     <div class = "card">

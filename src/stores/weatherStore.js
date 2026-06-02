@@ -40,7 +40,7 @@ const historial = ref([])
         return 'Fresco'
     })
 /* Regresa el icono segun el codigo de clima Open Meteo dxddxdxdxdxdxdxdxd*/
-const inconoClima = computed(() => {
+const iconoClima = computed(() => {
     tieneClima.value ? interpretaCodigo(clima.codigoClima).emoji : '🌐'
 })
  
@@ -76,7 +76,7 @@ const tiempoActualizacion = computed(() => {
 
     //Exponer todo lo que los componentes pueden utilizar
     return {
-        ciudad, latitud, longitud, temperatura, viento, cargando, error,
+        ciudad, latitud, longitud, clima, historial, cargando, error,
         tieneClima, descripcionClima, iconoClima, tiempoActualizacion,
         setCiudad, setClima, limpiarError
     }
