@@ -17,6 +17,7 @@ export async function obtenerClima(lat, lon){
             timezone: 'auto'
         }
     })
+    console.log(respuesta.status)
     const {temperature_2m, wind_speed_10m, weather_code} = respuesta.data.current
     return {
         temperatura: temperature_2m, 
@@ -38,7 +39,14 @@ export async function obtenerClima(lat, lon){
         return{emoji: '🌩', desc:'Tormenta'}
     }
 
+// ...todo tu código existente de interpretaCodigo y lo que tengas...
 
+export async function obtenerTipoCambio() {
+  const resp = await fetch('https://v6.exchangerate-api.com/v6/e440e91451d22b837d2f0378/pair/EUR/MXN')
+  const datos = await resp.json()
+  if (datos.result !== 'success') throw new Error('Error al obtener tipo de cambio')
+  return datos.conversion_rate
+}
 
 
 

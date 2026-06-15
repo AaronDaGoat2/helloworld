@@ -1,102 +1,81 @@
-import { defineStore } from "pinia";
-import { ref, computed, reactive } from "vue";
-import { renderToString } from "vue/server-renderer";
-import {interpretarCodigo} from "../services/weatherServices";
+import { defineStore } from "pinia"
+import { ref, computed, reactive } from "vue"
+import { interpretaCodigo, obtenerTipoCambio } from "../services/weatherService"
 
+export const useWeatherStore = defineStore('weather', () => {
+  const ciudad = ref('Cancun')
+  const pais = ref('Mexico')
+  const latitud = ref(20.970)
+  const longitud = ref(-86.93)
+  const cargando = ref(false)
+  const error = ref('')
 
-export const useWeatherStore =defineStore('weather', () =>{
-    //Estados
-    const ciudad = ref('Cancun')
-    const latitud = ref(20.970)
-    const longitud = ref(-86.93)
-   // const temperatura = ref(null)
-    //const viento = ref(null)
-    const cargando = ref(false)
-    const error = ref('')
-
-    /* Datos del clima agrupados con reactive */
-const clima = reactive({
+  const clima = reactive({
     temperatura: null,
     viento: null,
     codigoClima: 0,
-    ultimaActualizacion:null
-})
+    ultimaActualizacion: null
+  })
 
-/* Historial de ciudades consultadas*/
-const historial = ref([])
+  const historial = ref([])
 
+  // --- tipo de cambio ---
+  const tipoCambio = ref(null)
+  const cargandoCambio = ref(false)
 
+  async function cargarTipoCambio() {
+    cargandoCambio.value = true
+    try {
+      tipoCambio.value = await obtenerTipoCambio()
+    } catch {
+      tipoCambio.value = null
+    } finally {
+      cargandoCambio.value = false
+    }
+  }
+  // ----------------------
 
-
-
-    //Computadas
-    const tieneClima=computed(() => clima.temperatura!==null)
-
-    const descripcionClima= computed(() => {
-        if(!clima.temperatura) return 'Sin datos'
-        if(clima.temperatura > 30 ) return 'Esta HOT'
-        if(clima.temperatura > 25 ) return 'Calido'
-        if(clima.temperatura > 15 ) return 'Templado'
-        return 'Fresco'
-    })
-/* Regresa el icono segun el codigo de clima Open Meteo dxddxdxdxdxdxdxdxd*/
-const iconoClima = computed(() => {
-    tieneClima.value ? interpretaCodigo(clima.codigoClima).emoji : '🌐'
-})
- 
-/*FC: Tiempo desde desde la ultima actualizacion */
-const tiempoActualizacion = computed(() => {
-    if(!clima.ultimaActualizacion) return 'NUNCA'
-    
+  const tieneClima = computed(() => clima.temperatura !== null)
+  const descripcionClima = computed(() => {
+    if (!clima.temperatura) return 'Sin datos'
+    if (clima.temperatura > 30) return 'Esta HOT'
+    if (clima.temperatura > 25) return 'Calido'
+    if (clima.temperatura > 15) return 'Templado'
+    return 'Fresco'
+  })
+  const iconoClima = computed(() => {
+    return tieneClima.value ? interpretaCodigo(clima.codigoClima).emoji : '🌐'
+  })
+  const tiempoActualizacion = computed(() => {
+    if (!clima.ultimaActualizacion) return 'NUNCA'
     const minutos = Math.floor((Date.now() - clima.ultimaActualizacion) / 60000)
     if (minutos < 1) return "Hace menos de un minuto"
-    if( minutos < 60) return `hace ${minutos} minutos`
-    return `hace ${Math.floor(minutos/60)} h.`
+    if (minutos < 60) return `hace ${minutos} minutos`
+    return `hace ${Math.floor(minutos / 60)} h.`
+  })
 
-})
-
-
-
-    //Accioones
-    function setCiudad (nombre, lat, lon ){
-        ciudad.value = nombre
-        latitud.value=lat
-        longitud.value=lon
+  function setCiudad(nombre, lat, lon, paisNombre) {
+    ciudad.value = nombre
+    pais.value = paisNombre
+    latitud.value = lat
+    longitud.value = lon
+    const yaExiste = historial.value.some(c => c.nombre === nombre)
+    if (!yaExiste) {
+      historial.value = [{ nombre, lat, lon }, ...historial.value.slice(0, 5)]
     }
-    function setClima(temp, vientKm , cod){
-    clima.temperatura=temp
+  }
+  function setClima(temp, vientKm, cod) {
+    clima.temperatura = temp
     clima.viento = vientKm
     clima.codigoClima = cod
+  }
+  function limpiarError() { error.value = '' }
+  function limpiarHistorial() { historial.value = [] }
 
-    }
-
-    function limpiarError(){
-        error.value=''
-    }
-
-    //Exponer todo lo que los componentes pueden utilizar
-    return {
-        ciudad, latitud, longitud, clima, historial, cargando, error,
-        tieneClima, descripcionClima, iconoClima, tiempoActualizacion,
-        setCiudad, setClima, limpiarError
-    }
-
-
+  return {
+    ciudad, pais, latitud, longitud, clima, historial, cargando, error,
+    tieneClima, descripcionClima, iconoClima, tiempoActualizacion,
+    tipoCambio, cargandoCambio,
+    setCiudad, setClima, limpiarError, limpiarHistorial, cargarTipoCambio
+  }
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
